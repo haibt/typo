@@ -112,6 +112,17 @@ class Admin::ContentController < Admin::BaseController
     end
     render :text => nil
   end
+  
+  def merge
+    id = params[:id]
+    id = params[:article][:id] if params[:article] && params[:article][:id]
+    merged_id = params[:merge_with]
+    @article = Article.find id rescue nil
+    (redirect_to :index; return) unless @article
+    @new_article = @article.merge_with merged_id.to_i rescue nil
+    (redirect_to "/admin/content/edit/#{@new_article.id}"; return) if @new_article && @new_article.id
+    redirect_to "/admin/content/edit/#{@article.id}"
+  end
 
   protected
 

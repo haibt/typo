@@ -73,7 +73,15 @@ class Article < Content
 
   def set_permalink
     return if self.state == 'draft'
-    self.permalink = self.title.to_permalink if self.permalink.nil? or self.permalink.empty?
+    new_permalink = self.permalink.nil? || self.permalink.blank? ? self.title.to_permalink : self.permalink
+    if self.new_record?
+      exts = Article.where("permalink LIKE ?", new_permalink).map{ |rec| rec.permalink }
+    else
+      exts = Article.where("permalink LIKE ? AND id <> ?", new_permalink, self.id).map{ |rec| rec.permalink }
+    end
+    self.permalink = new_permalink and return if exts.empty?
+    index = exts.map{|ext| ext.match(/#{new_permalink}(\d*)\Z/i)[1].to_i if ext.match(/#{new_permalink}(\d*)\Z/i)}.compact.max
+    self.permalink = new_permalink + (index ? index + 1 : "").to_s
   end
 
   def has_child?
@@ -414,6 +422,22 @@ class Article < Content
 
   def access_by?(user)
     user.admin? || user_id == user.id
+  end
+  
+  def merge_with(other_article_id)
+    return nil if other_article_id.nil? || other_article_id == id
+    merged_article = Article.find other_article_id
+    return nil unless merged_article
+
+    self.body += " " + merged_article.body
+    self.save
+    merged_article.comments.each do |comment|
+      comment.article = self
+      comment.save
+    end
+    merged_article.reload
+    merged_article.destroy
+    return self
   end
 
   protected

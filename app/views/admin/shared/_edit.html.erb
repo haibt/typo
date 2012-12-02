@@ -4,3 +4,18 @@
   <%= render :partial => "form" %>
 
 <% end %>
+
+
+  
+<% if current_user.admin? %>
+  
+  <%= form_tag("/admin/content/merge/#{@article.id}", :id => "article_merge_form", :class => className) do %>
+    <div class=''>
+      <h4><%= _("Merge Articles") %></h4>
+      <ul id='merge_articles' class='inputs-list'>
+        Article ID <input type="textbox", class = "span4" value="" name="merge_with" id="merge_with" /> <br/>
+        <input type="submit" value="Merge">
+      </ul>
+    </div>
+  <% end %>
+<% end %>
