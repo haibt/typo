@@ -435,6 +435,7 @@ class Article < Content
       comment.article = self
       comment.save
     end
+
     merged_article.reload
     merged_article.destroy
     return self
